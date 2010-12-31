@@ -40,7 +40,7 @@ class Yui {
 		$newData = $data['upload'];
 		if($newData) {
 			$options = $this->getOptions($data);
-			$skipMinFiles = $data[skipmin];
+			$skipMinFiles = $data['skipmin'];
 			
 			// Check how many files are being uploaded
 			foreach($newData['error'] as $key => $error) {
@@ -52,7 +52,7 @@ class Yui {
 
 					if(file_exists($this->tmp_dir . DS . $name)) {
 						$fileInfo = pathinfo($name);
-						$this->fileList[] = $fileInfo[basename];
+						$this->fileList[] = $fileInfo['basename'];
 						$this->copy($name, $options, $skipMinFiles);
 					}
 				}
@@ -85,14 +85,16 @@ class Yui {
 		$options = "";
 		$options .= "--charset UTF-8 ";
 		
-		if($data[verbose]) $options .= "--verbose ";
-		if(isset($data[line_break]) && $data[line_break] != '') {
-			$breakLength = min(intval($data[line_break]), 10000);// sanitize input
+		$breakLength = $data['line_break']
+		if(is_numeric($breakLength)) {
+			$breakLength = min(intval($breakLength), 10000);// sanitize input
 			$options .= "--line-break " . $breakLength . ' ';
 		}
-		if($data[nomunge]) $options .= "--nomunge  ";
-		if($data[preserve_semi]) $options .= "--preserve-semi ";
-		if($data[disable_optimizations]) $options .= "--disable-optimizations ";
+		
+		if($data['verbose']) $options .= "--verbose ";
+		if($data['nomunge']) $options .= "--nomunge  ";
+		if($data['preserve_semi']) $options .= "--preserve-semi ";
+		if($data['disable_optimizations']) $options .= "--disable-optimizations ";
 		
 		return $options;
 	}
@@ -101,7 +103,7 @@ class Yui {
 	protected function copy($data, $options, $skipMinFiles) {
 		$PathArray = explode('/', $_SERVER['SCRIPT_FILENAME']);
 		$fileInfo = pathinfo($data);
-		$ext = $fileInfo[extension];
+		$ext = $fileInfo['extension'];
 		$compression = 'none';
 		
 		// sanitize input
@@ -120,7 +122,7 @@ class Yui {
 		
 		
 		$dontCompress = false;
-		if ($skipMinFiles and preg_match('/.+(-|\.|_)min$/', $fileInfo[filename])) {
+		if ($skipMinFiles and preg_match('/.+(-|\.|_)min$/', $fileInfo['filename'])) {
 			$dontCompress = true;
 		}
 		
@@ -129,7 +131,7 @@ class Yui {
 			$err = 0;
 		}
 		else {
-			$output = $dir . $this->tmp_dir . DS . uniqid($fileInfo[filename]) . $this->ext;
+			$output = $dir . $this->tmp_dir . DS . uniqid($fileInfo['filename']) . $this->ext;
 			
 			$cmd = "java -jar " . $dir . "yuicompressor-2.4.2.jar " . $options . "-o " . $output . " " . $input . " 2>&1";
 			exec($cmd, $out, $err); // Run Compressor
