@@ -12,6 +12,7 @@
 	- changed Yui member visability, renamed some vars and moved to K&R syntax
 	- added compressor error to report to avoid silent failure
 	- added an option to not compress files ending [-._]min.js
+	- added option to reorder files based on fileorder array
 	
 	TODO: properly sanitize all user input
 	TODO: refactor the entire php application :)
@@ -38,7 +39,30 @@ class Yui {
 
 	// Upload file(s)
 	protected function upload($data) {
-		$newData = $data['upload'];
+		$upload = $data['upload'];
+	
+		// If a fileOrder list provided then reorder the uploaded files
+		if (isset($data['fileorder'])) {
+			$newData = Array();
+			$count = 0;
+			$itemIndex; // file index in FILES array based on fileorder list
+			
+			foreach($data['fileorder'] as $itemName) {
+				$itemIndex = array_search($itemName, $upload['name']);
+				
+				$newData['name'][$count]     = $upload['name'][$itemIndex];
+				$newData['tmp_name'][$count] = $upload['tmp_name'][$itemIndex];
+				$newData['error'][$count]    = $upload['error'][$itemIndex];
+				$newData['size'][$count]     = $upload['size'][$itemIndex];
+				$newData['type'][$count]     = $upload['type'][$itemIndex];
+				
+				$count++;
+			}
+		}
+		else {
+			$newData = $upload;
+		}
+		
 		if($newData) {
 			$options = $this->getOptions($data);
 			$skipMinFiles = $data['skipmin'];
@@ -54,7 +78,7 @@ class Yui {
 					if(file_exists($this->tmp_dir . DS . $name)) {
 						$fileInfo = pathinfo($name);
 						$this->fileList[] = $fileInfo['basename'];
-						$this->copy($name, $options, $skipMinFiles);
+						$this->compressAndConcat($name, $options, $skipMinFiles);
 					}
 				}
 			}
@@ -101,7 +125,7 @@ class Yui {
 	}
 	
 	// Copy content
-	protected function copy($data, $options, $skipMinFiles) {
+	protected function compressAndConcat($data, $options, $skipMinFiles) {
 		$PathArray = explode('/', $_SERVER['SCRIPT_FILENAME']);
 		$fileInfo = pathinfo($data);
 		$ext = $fileInfo['extension'];
@@ -153,44 +177,6 @@ class Yui {
 		$this->createReport($data, $compression, $out, $err);
 
 	}
-	
-	// Create and store the report
-	protected function createReport ($fileName, $compression, $out, $err) {
-		$report = '';
-		
-		if ($err === 0) {
-			$report .= "<strong>File: {$fileName} (compressed: {$compression})</strong><br />\n";
-			if (sizeof($out)) {
-				$report .= " - fixing warnings will improve the quality and compressibility of your code.\n";
-			}
-		}
-		else {
-			$report .= "<strong class=\"error\">File: {$fileName} COMPRESSION FAILED!!</strong><br />";
-			$report .= " - see error line numbers listed below and fix the file before compressing again.\n";
-		}
-		
-		$report .= '<dl>';
-		/*
-			TODO: Improve the report parsing.
-		*/
-		for ($i = 0; $i < sizeof($out); $i++) {
-			$line = $out[$i];
-			if ($line == '') continue;
-			if (strpos($line, '[WARNING]') === 0) {
-				$report .= '<dt class="warning">' . htmlentities($line) .'</dt>';
-			}
-			elseif (strpos($line, '[ERROR]') === 0) {
-				$report .= '<dt class="error">' . htmlentities($line) .'</dt>';
-			}
-			else {
-				$report .= '<dd>' . $this->parseWarnings($line) .'</dd>';
-			}
-		}
-		
-		$report .= "</dl>\n";
-		
-		$this->report .= $report;
-	}
 
 	// Write file
 	protected function write($data, $name_set = NULL) {
@@ -241,6 +227,46 @@ class Yui {
 		return str_replace($find, $replace, $content);
 	}
 	
+	
+	// Create and store the report
+	protected function createReport ($fileName, $compression, $out, $err) {
+		$report = '';
+		
+		if ($err === 0) {
+			$report .= "<strong>File: {$fileName} (compressed: {$compression})</strong><br />\n";
+			if (sizeof($out)) {
+				$report .= " - fixing warnings will improve the quality and compressibility of your code.\n";
+			}
+		}
+		else {
+			$report .= "<strong class=\"error\">File: {$fileName} COMPRESSION FAILED!!</strong><br />";
+			$report .= " - see error line numbers listed below and fix the file before compressing again.\n";
+		}
+		
+		$report .= '<dl>';
+		/*
+			TODO: Improve the report parsing.
+		*/
+		for ($i = 0; $i < sizeof($out); $i++) {
+			$line = $out[$i];
+			if ($line == '') continue;
+			if (strpos($line, '[WARNING]') === 0) {
+				$report .= '<dt class="warning">' . htmlentities($line) .'</dt>';
+			}
+			elseif (strpos($line, '[ERROR]') === 0) {
+				$report .= '<dt class="error">' . htmlentities($line) .'</dt>';
+			}
+			else {
+				$report .= '<dd>' . $this->parseWarnings($line) .'</dd>';
+			}
+		}
+		
+		$report .= "</dl>\n";
+		
+		$this->report .= $report;
+	}
+
+	
 	// Format warning output
 	protected function parseWarnings($line) {
 		
@@ -252,6 +278,7 @@ class Yui {
 			
 		return $line;
 	}
+
 
 	// remove older comressed files from file system
 	protected function clearOldFiles() {

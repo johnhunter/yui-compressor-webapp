@@ -1,4 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
+<html>
+<head>
 <?php
 
 include_once "inc/core.php";
@@ -9,26 +11,23 @@ if($_POST['submit']){
 }
 
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
+	<meta charset="utf-8">
     <title>Javascript / CSS Compressor</title>
 
 
     <link rel="stylesheet" type="text/css" href="assets/general.css" media="all" />
-	<script type="text/javascript" src="assets/jquery-1.2.6.js"></script>
-	<script type="text/javascript" src="assets/general.js"></script>
 
-<!--
-	<link rel="stylesheet" type="text/css" href="assets/all.css" media="all" />
-	<script type="text/javascript" src="assets/all.js"></script>
--->
 </head>
 <body>
 <div id="container">
     <div id="main">
         <h1>Javascript / CSS Compressor</h1>
-        <form class="smart-form" method="post" enctype="multipart/form-data" action="./">
+        <form method="post" enctype="multipart/form-data" action="./">
+		<!--<form method="post" enctype="multipart/form-data" action="http://realhost/~johnhunter/php-test/form_response.php">-->
 			
+			
+			
+<!--
 			
             <div id="files">
                 <p class="row">
@@ -39,18 +38,30 @@ if($_POST['submit']){
 					</label>
                 </p>
 
-	            <!-- further upload fields added here -->
+	          	
             </div>
 			
+
             <div id="fieldAction">
                 <a id="addFileUpload" class="control" href="#add-file">+ add another file</a>
             </div>
+-->
+			
+			<div id="upload-wrapper" title="select files for upload&hellip;">
+			    <input type="file" multiple="true" id="upload" accept="text/*" name="upload[]">
+			</div>
+
+
+			<div id="filenames">
+				<!--filenames dynamically created here-->
+			</div>
+			
 			
 			<div id="meta">
 				 <p>
 	                <label for="name">Name for compressed file:</label>
 	                <input type="text" id="name" name="name" value="" maxlength="40" />
-					<strong>.</strong> <input id="name-suffix" name="name-suffix" disabled="disabled" maxlength="3" />
+					<strong>.</strong> <input id="name-suffix" name="name-suffix" maxlength="3" />
 		        </p>
 				<p>
 					<label for="file-header" title="You can edit the header or use the defaut. [file list] will substitute the compressed file names, [date:time] will substitute the comression timestamp.">Header comment:</label>
@@ -128,5 +139,26 @@ if($_POST['submit']){
 
 
 </div>
+
+
+<script id="fileRowTmpl" type="text/x-jquery-tmpl">
+    <p>
+		<code>${name}</code>
+		<small>${kbSize}k</small>
+		<input type="hidden" name="fileorder[]" value="${name}">
+	</p>
+</script>
+
+
+<!--
+<script src="assets/jquery-1.4.2.min.js"></script>
+<script src="assets/jquery.tmpl.min.js"></script>
+<script src="assets/jquery-ui-1.8.5.custom.min.js"></script>
+-->
+
+<script src="assets/lib.js"></script>
+<script src="assets/general.js"></script>
+
+
 </body>
 </html>

@@ -5,9 +5,41 @@
 */
 
 
+var filesUpload = $('#upload');
+
+filesUpload.change(parseUpload);
+if (filesUpload.val()) parseUpload();
+
+function parseUpload () {
+	
+	var el = filesUpload,
+		filenames = $('#filenames'),
+		fileList = filesUpload.get(0).files || [];
+	
+	filenames.empty().sortable({
+		axis: 'y' ,
+		containment: 'parent',
+		forcePlaceholderSize: true
+	});
+	
+	$.each(fileList, function (i, v) {
+		
+		//	v.name, v.size, v.type,
+		// TODO test mimetype is text/*
+		
+		v.kbSize = Number(v.size/1000).toFixed(2);
+		$( "#fileRowTmpl" ).tmpl(v).appendTo(filenames);
+		
+	});
+	
+}
+
+
+
+
 $(document).ready(function () {
 	
-	multiUpload.init();
+	//multiUpload.init();
 	
 
 	$("#removefield").click(function (e){
