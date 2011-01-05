@@ -16,6 +16,12 @@
 	
 	TODO: properly sanitize all user input
 	TODO: refactor the entire php application :)
+	
+	TODO: for multifile:
+		- reinstate a delete action [done]
+		- figure out how to handle the new file name
+		- new layout
+		
 */
 
 class Yui {
@@ -41,7 +47,7 @@ class Yui {
 	protected function upload($data) {
 		$upload = $data['upload'];
 	
-		// If a fileOrder list provided then reorder the uploaded files
+		// If a fileOrder list (HTML5 file api) provided then reorder the uploaded files
 		if (isset($data['fileorder'])) {
 			$newData = Array();
 			$count = 0;
@@ -231,37 +237,41 @@ class Yui {
 	// Create and store the report
 	protected function createReport ($fileName, $compression, $out, $err) {
 		$report = '';
+		$count = sizeof($out);
 		
 		if ($err === 0) {
-			$report .= "<strong>File: {$fileName} (compressed: {$compression})</strong><br />\n";
+			$report .= "<h4>{$fileName} (compressed: {$compression})</h4>\n";
 			if (sizeof($out)) {
-				$report .= " - fixing warnings will improve the quality and compressibility of your code.\n";
+				//$report .= " - fixing warnings will improve the quality and compressibility of your code.\n";
 			}
 		}
 		else {
-			$report .= "<strong class=\"error\">File: {$fileName} COMPRESSION FAILED!!</strong><br />";
-			$report .= " - see error line numbers listed below and fix the file before compressing again.\n";
+			$report .= "<h4 class=\"error\">{$fileName} COMPRESSION FAILED!!<h4>";
+			//$report .= " - see error line numbers listed below and fix the file before compressing again.\n";
 		}
 		
-		$report .= '<dl>';
-		/*
-			TODO: Improve the report parsing.
-		*/
-		for ($i = 0; $i < sizeof($out); $i++) {
-			$line = $out[$i];
-			if ($line == '') continue;
-			if (strpos($line, '[WARNING]') === 0) {
-				$report .= '<dt class="warning">' . htmlentities($line) .'</dt>';
+		if ($count > 0) {
+			
+			$report .= '<dl>';
+			/*
+				TODO: Improve the report parsing.
+			*/
+			for ($i = 0; $i < $count; $i++) {
+				$line = $out[$i];
+				if ($line == '') continue;
+				if (strpos($line, '[WARNING]') === 0) {
+					$report .= '<dt class="warning">' . htmlentities($line) .'</dt>';
+				}
+				elseif (strpos($line, '[ERROR]') === 0) {
+					$report .= '<dt class="error">' . htmlentities($line) .'</dt>';
+				}
+				else {
+					$report .= '<dd>' . $this->parseWarnings($line) .'</dd>';
+				}
 			}
-			elseif (strpos($line, '[ERROR]') === 0) {
-				$report .= '<dt class="error">' . htmlentities($line) .'</dt>';
-			}
-			else {
-				$report .= '<dd>' . $this->parseWarnings($line) .'</dd>';
-			}
+			$report .= "</dl>\n";
 		}
-		
-		$report .= "</dl>\n";
+
 		
 		$this->report .= $report;
 	}

@@ -18,13 +18,13 @@ a							{ color: #0D82C6 }
 a:visited, a:active, a:focus{ color: #DD0F2A }
 
 #files, #fieldAction,
-#compressedFile				{ padding: 10px; background: #eee; }
+#compressed-file			{ padding: 10px; background: #eee; }
 #fieldAction				{ padding: 0; }
-#compressedFile				{ margin-top: 30px; padding-top: 20px; border: 1px solid #5AB5E5; }
+#compressed-file			{ margin-top: 30px; padding-top: 20px; border: 1px solid #5AB5E5; }
 #addFileUpload				{ display: block; padding: 5px 10px; text-align: right; }
 
 #files						{ padding: 0; }
-p.row						{ margin: 0; padding: 10px; overflow: hidden; position: relative; border-bottom: 1px solid #fff; }
+p.row						{ margin: 2px 0; padding: 10px; position: relative; border: 1px solid #ccc; }
 p.hint,
 span.hint					{ display: block; font-size: 0.9em; font-weight: bold; margin: 0; padding: 3px 5px 0 5px; color: #fff; background: #5AB5E5; border: 1px solid #fff; }
 span.filename				{ display: block; float: left; font-family: monospace; margin: 0.2em; }
@@ -61,14 +61,14 @@ a.control:hover				{ background: #ddd; }
 #name						{ width: 15em; text-align: right; }
 #file-header				{ width: 100%; }
 #compress-button			{ height: 3em; width: 22em; font-weight: bold; font-size: 1.2em; }
-#compressedFile h3			{ margin-top: 0.5em; }
+#compressed-file h3			{ margin-top: 0.5em; }
 
 
 
 #report						{ border: 1px solid #999; margin: 10px 0; padding: 0 10px; font-size: .8em; line-height: 1.3em; background: #CFEDF1; }
-#report h3					{ padding-bottom: 1em; border-bottom: 1px dotted #333; }
-#report dl					{ margin: 1em 0; padding-left: 10px; border-bottom: 1px dotted #333; }
-#report dt					{ margin: 1em 0 0; font-style: italic; color: #249; }
+#report h3					{ }
+#report dl					{ margin: 1em 0; padding-left: 10px; }
+#report dt					{ font-style: italic; color: #249; }
 #report dd					{ margin: 1em 0; color: #135900; font-family: monospace; font-size: 120%; }
 #report dd em				{ font-style: normal; border-bottom:1px solid red; }
 #report .error				{ color: #f00; }
@@ -76,3 +76,71 @@ a.control:hover				{ background: #ddd; }
 
 #yui						{ margin-top: 2em; text-align: center; }
 #yui img					{ position: relative; top: 14px; }
+
+
+/*
+	new styles:
+*/
+
+#upload-wrapper {
+	position: relative;
+}
+#upload, 
+#upload-wrapper button {
+    font-size: 1em;
+    font-weight: bold;
+    height: 2.2em;
+    width: 20em;
+}
+#upload {
+	position: absolute;
+	top: 0;
+	left: 0;
+	opacity: 0;
+}
+#filenames {
+	padding: 10px 0;
+	position: relative;
+}
+p.row {
+	padding-left: 40px;
+	background: #fff url('spr_bg.png') no-repeat 0 50%;
+	border-radius: 2px;
+   -moz-border-radius: 2px;
+   -webkit-border-radius: 2px;
+   -khtml-border-radius: 2px;
+}
+p.row a {
+	font-size: 0.8em;
+	padding: 0 0.5em;
+}
+p.active {
+	background-color: #eee;
+	border-color: #aaa;
+}
+p.ui-sortable-helper {
+	border-color: #aaa;
+	-moz-box-shadow: rgba(0, 0, 0, 0.5) 3px 3px 3px;
+	-webkit-box-shadow: rgba(0, 0, 0, 0.5) 3px 3px 3px;
+	-o-box-shadow: rgba(0, 0, 0, 0.5) 3px 3px 3px;
+	box-shadow: rgba(0, 0, 0, 0.5) 3px 3px 3px;
+}
+p.deleting {
+	background-color: #F22;
+}
+#options textarea {
+	font-size: 0.955em;
+}
+#options label[for=file-header] {
+	font-weight: bold;
+}
+#options fieldset {
+	margin: 0;
+}
+#report h4 {
+	padding-top: 1em;
+	border-top: 1px dotted #333;
+}
+#report h4 a {
+	float: right;
+}

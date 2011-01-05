@@ -13,9 +13,15 @@ if($_POST['submit']){
 ?>
 	<meta charset="utf-8">
     <title>Javascript / CSS Compressor</title>
-
-
-    <link rel="stylesheet" type="text/css" href="assets/general.css" media="all" />
+	<!--
+		
+		This application uses the HTML5 file api and requires at least:
+		- Firefox 3.6
+		- Chrome 9
+		- Safari 5
+		
+	-->
+    <link rel="stylesheet" type="text/css" href="assets/general.css" media="all">
 
 </head>
 <body>
@@ -23,32 +29,11 @@ if($_POST['submit']){
     <div id="main">
         <h1>Javascript / CSS Compressor</h1>
         <form method="post" enctype="multipart/form-data" action="./">
-		<!--<form method="post" enctype="multipart/form-data" action="http://realhost/~johnhunter/php-test/form_response.php">-->
+			<!--<form method="post" enctype="multipart/form-data" action="http://realhost/~johnhunter/php-test/form_response.php">-->
 			
-			
-			
-<!--
-			
-            <div id="files">
-                <p class="row">
-                    <label>
-						<strong>Upload File</strong>
-                    	<input type="file" name="upload[]" value="" />
-						<a class="remove-field control" href="#remove">- remove</a>
-					</label>
-                </p>
-
-	          	
-            </div>
-			
-
-            <div id="fieldAction">
-                <a id="addFileUpload" class="control" href="#add-file">+ add another file</a>
-            </div>
--->
-			
-			<div id="upload-wrapper" title="select files for upload&hellip;">
-			    <input type="file" multiple="true" id="upload" accept="text/*" name="upload[]">
+			<div id="upload-wrapper">
+				<button>select files for upload&hellip;</button>
+			    <input type="file" multiple="true" id="upload" name="upload[]">
 			</div>
 
 
@@ -60,9 +45,14 @@ if($_POST['submit']){
 			<div id="meta">
 				 <p>
 	                <label for="name">Name for compressed file:</label>
-	                <input type="text" id="name" name="name" value="" maxlength="40" />
-					<strong>.</strong> <input id="name-suffix" name="name-suffix" maxlength="3" />
+	                <input type="text" id="name" name="name" value="" maxlength="40">
+					<strong>.</strong> <input id="name-suffix" disabled name="name-suffix" maxlength="3">
 		        </p>
+			</div>
+			
+			<a id="options-control" class="control" href="#show / hide options"><strong>options</strong></a>
+			<div id="options" style="display:none">
+				
 				<p>
 					<label for="file-header" title="You can edit the header or use the defaut. [file list] will substitute the compressed file names, [date:time] will substitute the comression timestamp.">Header comment:</label>
 					<textarea id="file-header" name="file-header" rows="4" cols="40" wrap="off">/*
@@ -71,14 +61,11 @@ if($_POST['submit']){
 	For licences see original source files.
 */</textarea>
 				</p>
-			</div>
-			
-			<a id="options-control" class="control" href="#show / hide options"><strong>options</strong></a>
-			<div id="options" style="display:none">
+				
 				<fieldset>
 					<legend>General options</legend>
 					<label for="verbose">
-						<input type="checkbox" id="verbose" name="verbose" checked="checked" value="true" />
+						<input type="checkbox" id="verbose" name="verbose" checked="checked" value="true">
 						display informational messages and warnings 
 					</label>
 					<label for="line_break">Insert line breaks: &nbsp;
@@ -93,34 +80,35 @@ if($_POST['submit']){
 				<fieldset>
 					<legend>JavaScript options</legend>
 					<label for="skipmin">
-						<input type="checkbox" id="skipmin" name="skipmin" checked="checked" value="true" />
+						<input type="checkbox" id="skipmin" name="skipmin" checked="checked" value="true">
 						don't compress files ending 'min.js'
 					</label>
 					<label for="nomunge">
-						<input type="checkbox" id="nomunge" name="nomunge" value="true" />
+						<input type="checkbox" id="nomunge" name="nomunge" value="true">
 						minify only - don't obfuscate local variables  
 					</label>
 					<label for="preserve_semi">
-						<input type="checkbox" id="preserve_semi" name="preserve_semi" value="true" />
+						<input type="checkbox" id="preserve_semi" name="preserve_semi" value="true">
 						preserve semicolons
 					</label>
 					<label for="disable_optimizations">
-						<input type="checkbox" id="disable_optimizations" name="disable_optimizations" value="true" />
+						<input type="checkbox" id="disable_optimizations" name="disable_optimizations" value="true">
 						disable micro-optimizations (e.g. pre-processing string concatenations)
 					</label>
 				</fieldset>
 			</div>
 			
             <p class="action">
-                <input id="compress-button" type="submit" name="submit" value="compress files" />
+                <!--<input id="compress-button" type="submit" name="submit" value="compress files">-->
+				<button id="compress-button" name="submit" value="compress files">compress files</button>
             </p>
         </form>
 		
         <?php if($yui->compressedFile){ ?>
 	
-        <div id="compressedFile">
+        <div id="compressed-file">
             <p class="hint">Right click and save file...</p>
-            <h3><?php echo 'Download file: ' . $yui->compressedFile; ?></h3>
+            <h3>Download file: <?php echo $yui->compressedFile; ?></h3>
         </div>
 
         <?php } ?>
@@ -142,13 +130,16 @@ if($_POST['submit']){
 
 
 <script id="fileRowTmpl" type="text/x-jquery-tmpl">
-    <p>
+    <p class="row">
 		<code>${name}</code>
 		<small>${kbSize}k</small>
 		<input type="hidden" name="fileorder[]" value="${name}">
+		<a class="remove-field control" href="#remove">remove</a>
 	</p>
 </script>
 
+
+</body>
 
 <!--
 <script src="assets/jquery-1.4.2.min.js"></script>
@@ -159,6 +150,4 @@ if($_POST['submit']){
 <script src="assets/lib.js"></script>
 <script src="assets/general.js"></script>
 
-
-</body>
 </html>

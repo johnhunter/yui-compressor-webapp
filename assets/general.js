@@ -1,223 +1,216 @@
 /*
 	Web implementation of the Yui compressor.
-	author: J. Hunter / A. Smith
-	Modified: 2010-07-25
+	author: J. Hunter
+	Modified: 2011-01-05
+	
+	
 */
-
-
-var filesUpload = $('#upload');
-
-filesUpload.change(parseUpload);
-if (filesUpload.val()) parseUpload();
-
-function parseUpload () {
-	
-	var el = filesUpload,
-		filenames = $('#filenames'),
-		fileList = filesUpload.get(0).files || [];
-	
-	filenames.empty().sortable({
-		axis: 'y' ,
-		containment: 'parent',
-		forcePlaceholderSize: true
-	});
-	
-	$.each(fileList, function (i, v) {
-		
-		//	v.name, v.size, v.type,
-		// TODO test mimetype is text/*
-		
-		v.kbSize = Number(v.size/1000).toFixed(2);
-		$( "#fileRowTmpl" ).tmpl(v).appendTo(filenames);
-		
-	});
-	
-}
-
 
 
 
 $(document).ready(function () {
 	
-	//multiUpload.init();
-	
-
-	$("#removefield").click(function (e){
-		$("#files p.row:last").prev().remove();
-		e.preventDefault();
-		return(false);
-	});
-	
-	$('#options-control').click(function (e) {
-		this.blur();
-		e.preventDefault();
-		$(this).toggleClass('active');
-		$('#options').slideToggle(200);
-	});
+	multiUpload.init();
 	
 });
 
 
-var multiUpload = {
-	errorMessages: {
-		noUploadFile:	'You need to upload at least one file.', 
-		wrongFileType:	'Supported file types are .js or .css only.',
-		mixedFile:		'You can only compress one file type at a time, please upload either .js or .css files.',
-		noOutputFile:	'Please provide an output file name.'
-	},
-	errorType: {},
-	compressedSuffix: '-min',
+/*
+	Module multiUpload
+	@author	John Hunter
+*/
+var multiUpload = function ($) {
+	
+	var fileList,
+		fileCount,
+		listContainer,
+		fileExtn,
+		uploadField,
+		fileTypeField,
+		fileNameField,
+		reportPanel,
+		allowedFileTypes = /js|css/i,
+		defaultFileName = 'lib-min',
+		detailsText = ['show details','hide details'],
+		messages = {
+			noSupport:			'Your browser does not support multiple file uploads! \n\nThis application requires: Firefox 3.6+, Chrome 9+, or Safari 5+', 
+			noUploadFile: 		'You need to upload at least one file.', 
+			wrongFileType: 		'Supported file types are .js or .css only.',
+			mixedFile:			'You can only compress one file type at a time, please upload either .js or .css files.',
+			confDeleteFile:		'Are you sure you want to remove this file?',
+			confOverwriteFiles: 'Selecting new files for upload will overwrite your existing selection. Do you want to do that?'
+		};
 	
 	
-	init: function () {
-		var that = this,
-			container = $('#files');
-			
+	function init () {
+		uploadField = $('#upload');
+		fileTypeField = $('#name-suffix');
+		fileNameField = $('#name');
+		listContainer = $('#filenames');
+		reportPanel = $('#report');
 		
-		that.currentIndex = 0;
-		that.fileType = $('#name-suffix');
-		that.fileName = $('#name');
-		that.initialFilename = '';
-		that.resetErrors();
+		clearFileList();
 		
-		that.populate($('p.row:last', container), true);
+		if (!('files' in uploadField.get(0))) {
+			return error('noSupport', 'fatal');
+		}
 		
-		$('#addFileUpload').click(function (e) {
-			var prev = $('p.row:last', container);
-			container.append(prev.clone());
-			var current = container.find('p.row:last');
-			$('input', current).show();
-			$('a.remove-field', current).hide();
-			$('span.filename', current).remove();
-			
-			that.populate(current);
-			
-			e.preventDefault();
-			this.blur();
+		listContainer.sortable({
+			axis: 'y' ,
+			containment: 'parent',
+			forcePlaceholderSize: true,
+			cursor: 'move',
+			tolerance: 'pointer'
 		});
 		
-		$('#compress-button').click(function (e) {
-			var inputs = $('#files input');
-			
-			if ($('#name').val() === '') that.errorType.noOutputFile = true;
-			if (inputs.length === 0) that.errorType.noUploadFile = true;
-			
-			inputs.each(function () {
-				that.processUploadFile($(this));
+		if (uploadField.val()) parseUpload();
+		
+		uploadField.
+			change(parseUpload).
+			click(function () {
+				if (fileCount > 0 || reportPanel.length) {
+					var isConfirmed = confirm(messages.confOverwriteFiles);
+					if (isConfirmed) {
+						clearResult();
+						clearFileList();
+					}
+					return isConfirmed;
+				}
 			});
-			
-			
-			if (that.showErrors()) {
-				e.preventDefault();
-				return false;
+		
+		
+		$('form').submit(function (e) {
+			if (fileCount == 0) return error('noUploadFile', 'fatal');
+		}).find(':text').bind('keypress', function (e) {
+			if (e.keyCode == 13) return false;
+		});
+		
+		$('a.remove-field').live('click', function (e) {
+			var row = $(this).parents('p');
+			e.preventDefault();
+			row.addClass('active');
+			if (confirm(messages.confDeleteFile)) {
+				row.swapClass('deleting','active').fadeOut(function () { row.remove(); });
+				fileCount--;
 			}
-			
-			return true;
+			else {
+				row.removeClass('active');
+			}
 		});
 		
-		$('form :text').bind('keypress', function (e) {
-			// dont submit on enter
-			if (e.keyCode == 13) { return false; }
-		});
-		
-	},
-	
-	populate: function (row, initial) {
-		var that = this,
-			index = that.currentIndex;
-			
-		index++;
-		$('span.index', row).html(index);
-		
-		$("input[type='file']", row)
-			.val('')
-			.change(function (e) {
-				var input = $(this),
-					filename = that.processUploadFile(input);
-				
-				// hide input and show filename
-				input.hide().before('<span class="filename">'+ filename +'</span>');
-				
-				that.showErrors();
-			});
-		
-		$('a.remove-field', row).click(function (e) {
-			$(this).parents('p.row').remove();
-			that.enableRemoveButtons();
+		$('#options-control').click(function (e) {
+			this.blur();
 			e.preventDefault();
+			$(this).toggleClass('active');
+			$('#options').slideToggle(200);
 		});
-		
-		if (!initial) {
-			row.hide();
-			row.slideDown(200);
-		}
 
-		that.enableRemoveButtons();
-		
-		that.currentIndex++;
-	},
-	
-	getFilename: function (fullpath) {
-		return fullpath.split(/[\\|\/]/).pop();
-	},
-	
-	enableRemoveButtons: function () {
-		var buttons = $('#files a.remove-field');
-		if (buttons.length === 1) {
-			buttons.hide();
-		}
-		else {
-			buttons.show();
-		}
-	},
-	
-	processUploadFile: function (input) {
-		//called on each upload click
-		
-		var that =  this,
-			filename = that.getFilename(input.val()),
-			errorType = { noUploadFile: false, wrongFileType: false, mixedFile: false, noOutputFile: false },
-			errorMsg = '',
-			ext = '',
-			fileType = that.fileType.val();
-			name = filename.split('.');
-			
-		
-		ext = name.pop().toLowerCase();
-		name = name.join('.');
-		
-		
-		if (!(/js|css/.test(ext))) that.errorType.wrongFileType = true;
-		if (that.fileName.val() === '') {
-			that.fileName.val(name + that.compressedSuffix);
-		}
-		if (fileType !== '' && fileType !== ext) {
-			that.errorType.mixedFile = true;
-		}
-		else {
-			that.fileType.val(ext);
-		}
-		
-		return filename;
-	},
-	
-	resetErrors: function () {
-		this.errorType = { noUploadFile: false, wrongFileType: false, mixedFile: false, noOutputFile: false };
-	},
-	
-	showErrors: function () {
-		var errorMsg = '';
-		
-		for (var key in this.errorType) {
-			if (this.errorType[key]) errorMsg += this.errorMessages[key] + '\n\n';
-		}
-		this.resetErrors();
-		
-		if (errorMsg) {
-			alert(errorMsg);
-			return true;
-		}
-		return false;
+		$('dl', reportPanel).each(function (i) {
+			var detail = $(this),
+				id = 'detail-' + (i+1);
+				control = $('<a href="#' + id + '">' + detailsText[0] + '</a>').click(function (e) {
+					e.preventDefault();
+					var el = $(this),
+						c = 'expanded',
+						isExp = el.hasClass(c);
+
+					if (isExp) this.blur();
+					el.text(detailsText[ isExp ? 0 : 1 ]);
+					el.toggleClass(c);
+					detail.slideToggle();
+				});
+
+			detail.hide().attr('id', id).prev().append(control);
+		});
 	}
 	
-};
+	
+	function clearFileList () {
+		listContainer.empty();
+		fileCount = 0;
+		fileList = [];
+		fileExtn = '';
+		fileNameField.val('');
+	}
+	
+	
+	function clearResult () {
+		reportPanel.remove();
+		$('#compressed-file').remove();
+	}
+	
+
+	function parseUpload () {
+		
+		fileList = uploadField.get(0).files || [];
+		
+		$.each(fileList, function (i, v) {
+			//	from file api: v.name, v.size, v.type
+			// NOTE: v.type is reported as text/* (Firefox) or application/x-javascript (Chrome)
+			
+			var name = v.name.split('.'),
+				extn = name.pop().toLowerCase();
+			
+			
+			if (fileList.length === 1) fileNameField.val(name.join('.') + '-min');
+			
+			if (!fileExtn) {
+				if (!allowedFileTypes.test(extn)) {
+					return error('wrongFileType', 'warning');// continue
+				}
+				fileExtn = extn;
+			}
+			else if (fileExtn !== extn) {
+				return error('mixedFile', 'fatal');// break
+			}
+
+			v.kbSize = Number(v.size/1000).toFixed(2);
+			
+			$( "#fileRowTmpl" ).tmpl(v).appendTo(listContainer); // optimize!!
+			fileCount++;
+			fileTypeField.val(fileExtn);
+		});
+		
+		if (!fileNameField.val()) {
+			fileNameField.val(defaultFileName);
+		}
+		
+	}
+	
+	
+	function error (name, severity) {
+		// TODO: write proper error reporting
+		
+		
+		if (severity === 'fatal') {
+			alert(messages[name] || name);
+			return false;
+		}
+		else {
+			alert(messages[name] || name);
+		}
+		
+		return true;
+	}
+	
+	
+	return {
+		init: init
+	};
+}(jQuery);
+
+
+
+
+// --- move to lib.js ---------------------------------------------------------/
+/*
+	swapClass - a jQuery plugin
+	@author	John Hunter
+*/
+(function ($) {
+	
+	$.fn.swapClass = function (add, remove) {
+		return this.addClass(add).removeClass(remove);
+	};
+		
+})(jQuery);
