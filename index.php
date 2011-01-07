@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<?php
-
-include_once "inc/core.php";
-
-if($_POST['submit']){
-    $yui = new Yui;
-    $yui->execute(array_merge($_FILES, $_POST));
-}
-
-?>
 	<meta charset="utf-8">
     <title>Javascript / CSS Compressor</title>
 	<!--
@@ -26,10 +16,12 @@ if($_POST['submit']){
 </head>
 <body>
 <div id="container">
+	
+	<h1>Javascript / CSS Compressor</h1>
+	
     <div id="main">
-        <h1>Javascript / CSS Compressor</h1>
-        <form method="post" enctype="multipart/form-data" action="./">
-			<!--<form method="post" enctype="multipart/form-data" action="http://realhost/~johnhunter/php-test/form_response.php">-->
+        <form method="post" enctype="multipart/form-data" target="result-frame" action="compressor.php">
+		<!--<form method="post" enctype="multipart/form-data" target="result-frame" action="http://realhost/~johnhunter/php-test/form_response.php">-->
 			
 			<div id="upload-wrapper">
 				<button>select files for upload&hellip;</button>
@@ -99,25 +91,12 @@ if($_POST['submit']){
 			</div>
 			
             <p class="action">
-                <!--<input id="compress-button" type="submit" name="submit" value="compress files">-->
-				<button id="compress-button" name="submit" value="compress files">compress files</button>
+				<button id="compress-button" name="submit" value="compress files"><b>compress files</b></button>
             </p>
+
         </form>
 		
-        <?php if($yui->compressedFile){ ?>
-	
-        <div id="compressed-file">
-            <p class="hint">Right click and save file...</p>
-            <h3>Download file: <?php echo $yui->compressedFile; ?></h3>
-        </div>
-
-        <?php } ?>
-		<?php if ($yui->report) { ?>
-		<div id="report">
-			<h3>Compression report</h3>
-			<?php echo $yui->report; ?>
-		</div>
-		<?php } ?>
+        <iframe id="result-frame" name="result-frame" src="" allowtransparency="true" style="display:none"></iframe>
     </div>
 
 	<p id="yui">

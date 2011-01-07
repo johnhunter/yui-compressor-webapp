@@ -4,19 +4,21 @@
 	Modified: 2011-01-05
 	
 	
+	TODO: Add progress meter on submit.
 */
 
 
 
 $(document).ready(function () {
 	
+	frameDialog.init('#result-frame');
 	multiUpload.init();
 	
 });
 
 
 /*
-	Module multiUpload
+	Module multiUpload - multifile upload and compression.
 	@author	John Hunter
 */
 var multiUpload = function ($) {
@@ -28,13 +30,13 @@ var multiUpload = function ($) {
 		uploadField,
 		fileTypeField,
 		fileNameField,
-		reportPanel,
 		allowedFileTypes = /js|css/i,
 		defaultFileName = 'lib-min',
 		detailsText = ['show details','hide details'],
+		submitButton,
 		messages = {
 			noSupport:			'Your browser does not support multiple file uploads! \n\nThis application requires: Firefox 3.6+, Chrome 9+, or Safari 5+', 
-			noUploadFile: 		'You need to upload at least one file.', 
+			noUploadFile: 		'You need to upload at least one file to compress.', 
 			wrongFileType: 		'Supported file types are .js or .css only.',
 			mixedFile:			'You can only compress one file type at a time, please upload either .js or .css files.',
 			confDeleteFile:		'Are you sure you want to remove this file?',
@@ -43,15 +45,16 @@ var multiUpload = function ($) {
 	
 	
 	function init () {
+		
 		uploadField = $('#upload');
 		fileTypeField = $('#name-suffix');
 		fileNameField = $('#name');
 		listContainer = $('#filenames');
-		reportPanel = $('#report');
+		submitButton = $('#compress-button');
 		
 		clearFileList();
 		
-		if (!('files' in uploadField.get(0))) {
+		if (uploadField.length && !('files' in uploadField.get(0))) {
 			return error('noSupport', 'fatal');
 		}
 		
@@ -63,27 +66,24 @@ var multiUpload = function ($) {
 			tolerance: 'pointer'
 		});
 		
-		if (uploadField.val()) parseUpload();
-		
 		uploadField.
 			change(parseUpload).
 			click(function () {
-				if (fileCount > 0 || reportPanel.length) {
+				if (fileCount > 0) {
 					var isConfirmed = confirm(messages.confOverwriteFiles);
-					if (isConfirmed) {
-						clearResult();
-						clearFileList();
-					}
+					if (isConfirmed) clearFileList();
 					return isConfirmed;
 				}
 			});
 		
-		
-		$('form').submit(function (e) {
-			if (fileCount == 0) return error('noUploadFile', 'fatal');
-		}).find(':text').bind('keypress', function (e) {
-			if (e.keyCode == 13) return false;
-		});
+		$('form').
+			submit(function (e) {
+				if (fileCount == 0) return error('noUploadFile', 'fatal');
+				submitButton.addClass('waiting');
+			}).
+			find(':text').bind('keypress', function (e) {
+				if (e.keyCode == 13) return false;
+			});
 		
 		$('a.remove-field').live('click', function (e) {
 			var row = $(this).parents('p');
@@ -92,6 +92,7 @@ var multiUpload = function ($) {
 			if (confirm(messages.confDeleteFile)) {
 				row.swapClass('deleting','active').fadeOut(function () { row.remove(); });
 				fileCount--;
+				if (fileCount === 0) clearFileList();
 			}
 			else {
 				row.removeClass('active');
@@ -104,10 +105,29 @@ var multiUpload = function ($) {
 			$(this).toggleClass('active');
 			$('#options').slideToggle(200);
 		});
-
-		$('dl', reportPanel).each(function (i) {
-			var detail = $(this),
-				id = 'detail-' + (i+1);
+	}
+	
+	function clearFileList () {
+		listContainer.empty();
+		fileCount = 0;
+		fileList = [];
+		fileExtn = '';
+		fileNameField.val('');
+		fileTypeField.val('');
+	}
+	
+	function processResult (body) {
+		var reportPanel = $('#report', body);
+		
+		submitButton.removeClass('waiting');
+		
+		if (reportPanel.length) {
+			
+			$('dl', reportPanel).each(function (i) {
+				var detail = $(this),
+					control,
+					id = 'detail-' + (i+1);
+					
 				control = $('<a href="#' + id + '">' + detailsText[0] + '</a>').click(function (e) {
 					e.preventDefault();
 					var el = $(this),
@@ -117,29 +137,17 @@ var multiUpload = function ($) {
 					if (isExp) this.blur();
 					el.text(detailsText[ isExp ? 0 : 1 ]);
 					el.toggleClass(c);
-					detail.slideToggle();
+					detail.toggle();
+					frameDialog.resize();
 				});
 
-			detail.hide().attr('id', id).prev().append(control);
-		});
+				detail.hide().attr('id', id).prev().append(control);
+			});
+			
+			return;
+		}
 	}
 	
-	
-	function clearFileList () {
-		listContainer.empty();
-		fileCount = 0;
-		fileList = [];
-		fileExtn = '';
-		fileNameField.val('');
-	}
-	
-	
-	function clearResult () {
-		reportPanel.remove();
-		$('#compressed-file').remove();
-	}
-	
-
 	function parseUpload () {
 		
 		fileList = uploadField.get(0).files || [];
@@ -166,7 +174,7 @@ var multiUpload = function ($) {
 
 			v.kbSize = Number(v.size/1000).toFixed(2);
 			
-			$( "#fileRowTmpl" ).tmpl(v).appendTo(listContainer); // optimize!!
+			$( "#fileRowTmpl" ).tmpl(v).appendTo(listContainer); // TODO: optimize template!!
 			fileCount++;
 			fileTypeField.val(fileExtn);
 		});
@@ -176,7 +184,6 @@ var multiUpload = function ($) {
 		}
 		
 	}
-	
 	
 	function error (name, severity) {
 		// TODO: write proper error reporting
@@ -193,12 +200,62 @@ var multiUpload = function ($) {
 		return true;
 	}
 	
-	
 	return {
-		init: init
+		init: init,
+		processResult: processResult
 	};
 }(jQuery);
 
+
+
+/*
+	Module frameDialog - loads content in a frameset
+	@author	John Hunter
+	created	2011-01-06
+*/
+var frameDialog = function ($) {
+	
+	var frame,
+		frameBody,
+		title = document.title;
+	
+	function init (iframeSelector, titleSep) {
+		titleSep = titleSep || ' > ';
+		frame = $(iframeSelector).hide();
+		
+		
+		frame.load(function () {
+			frameBody = $('body', frame.contents());
+			
+			var frameTitle = $('title', frameBody.parent()).html();
+			if (frameTitle) document.title = title + titleSep + frameTitle;
+			
+			$('a.close', frameBody).click(close);
+			
+			multiUpload.processResult(frameBody);
+			
+			frame.show();
+			resize();
+			
+		});
+	}
+	
+	function resize () {
+		frame.height(frameBody.outerHeight(true));
+	}
+	
+	function close (e) {
+		if (e) e.preventDefault();
+		document.title = title;
+		frame.hide();
+	}
+	
+	return {
+		init: init,
+		resize: resize
+	};
+	
+}(jQuery);
 
 
 
