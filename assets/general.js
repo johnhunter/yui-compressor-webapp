@@ -49,6 +49,7 @@ var multiUpload = function ($) {
 		fileNameField = $('#name');
 		listContainer = $('#filenames');
 		submitButton = $('#compress-button');
+		$('#fileRowTmpl').template('fileRowTemplate');
 		
 		clearFileList();
 		
@@ -173,7 +174,7 @@ var multiUpload = function ($) {
 
 			v.kbSize = Number(v.size/1000).toFixed(2);
 			
-			$( "#fileRowTmpl" ).tmpl(v).appendTo(listContainer); // TODO: optimize template!!
+			$.tmpl('fileRowTemplate', v).appendTo(listContainer);
 			fileCount++;
 			fileTypeField.val(fileExtn);
 		});
