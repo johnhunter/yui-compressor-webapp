@@ -85,7 +85,12 @@ var multiUpload = function ($) {
 				if (e.keyCode == 13) return false;
 			});
 		
-		$('a.remove-field').live('click', function (e) {
+		
+			$("table").delegate("td", "hover", function(){
+				$(this).toggleClass("hover");
+			});
+		
+		listContainer.delegate('a.remove-field', 'click', function (e) {
 			var row = $(this).parents('p');
 			e.preventDefault();
 			row.addClass('active');
