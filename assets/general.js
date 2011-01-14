@@ -3,8 +3,6 @@
 	author: J. Hunter
 	Modified: 2011-01-05
 	
-	
-	TODO: Add progress meter on submit.
 */
 
 
@@ -69,11 +67,12 @@ var multiUpload = function ($) {
 		uploadField.
 			change(parseUpload).
 			click(function () {
+				var isConfirmed = true;
 				if (fileCount > 0) {
-					var isConfirmed = confirm(messages.confOverwriteFiles);
+					isConfirmed = confirm(messages.confOverwriteFiles);
 					if (isConfirmed) clearFileList();
-					return isConfirmed;
 				}
+				return isConfirmed;
 			});
 		
 		$('form').

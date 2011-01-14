@@ -2,7 +2,7 @@
 /*
 	Web implementation of the Yui compressor.
 	author: J. Hunter / A. Smith
-	Modified: 2010-07-25
+	Modified: 2011-01-08
 	- added compression options
 	- added compression reporting
 	- added cleanup to remove old compressed files
@@ -13,14 +13,13 @@
 	- added compressor error to report to avoid silent failure
 	- added an option to not compress files ending [-._]min.js
 	- added option to reorder files based on fileorder array
+	- added for multifile hendling
+	- rewritten to display result in iframe
 	
 	TODO: properly sanitize all user input
 	TODO: refactor the entire php application :)
 	
-	TODO: for multifile:
-		- reinstate a delete action [done]
-		- figure out how to handle the new file name
-		- new layout
+
 		
 */
 
@@ -34,6 +33,18 @@ class Yui {
 	protected $fileList;
 	protected $ext;
 	public $report = ''; // store warnings from compressor
+	
+	
+	public function validateExtn($ext) {
+		switch ($ext) {
+			case 'js':
+			case 'css':
+				break;
+			default:
+				$ext = 'txt';
+		}
+		return $ext;
+	}
 	
 	// Execute all code
 	public function execute($data) {
@@ -78,7 +89,10 @@ class Yui {
 				if ($error == UPLOAD_ERR_OK) {
 					$tmp_name = $newData['tmp_name'][$key];
 					$name = $newData['name'][$key];
-
+					$nameInfo = pathinfo($name);
+					
+					$name = $nameInfo['filename'] . '.' . $this->validateExtn($nameInfo['extension']);
+					
 					move_uploaded_file($tmp_name, "$this->tmp_dir/$name");
 
 					if(file_exists($this->tmp_dir . DS . $name)) {
@@ -129,28 +143,16 @@ class Yui {
 		
 		return $options;
 	}
-	
+		
 	// Copy content
 	protected function compressAndConcat($data, $options, $skipMinFiles) {
-		$PathArray = explode('/', $_SERVER['SCRIPT_FILENAME']);
 		$fileInfo = pathinfo($data);
-		$ext = $fileInfo['extension'];
+		$dir = dirname($_SERVER['SCRIPT_FILENAME']) . DS;
+		$tmpdir = $dir . $this->tmp_dir . DS;
+		$input = $tmpdir . $data;
 		$compression = 'none';
 		
-		// sanitize input
-		switch ($ext) {
-			case 'js':
-			case 'css':
-				break;
-			default:
-				$ext = 'txt';
-		}
-		$this->ext = '.' . $ext;
-
-		array_pop($PathArray);
-		$dir = implode(DS, $PathArray) . DS;
-		$input = $dir . $this->tmp_dir . DS . $data;
-		
+		$this->ext = '.' . $this->validateExtn($fileInfo['extension']);
 		
 		$dontCompress = false;
 		if ($skipMinFiles and preg_match('/.+(-|\.|_)min$/', $fileInfo['filename'])) {
@@ -162,23 +164,22 @@ class Yui {
 			$err = 0;
 		}
 		else {
-			$output = $dir . $this->tmp_dir . DS . uniqid($fileInfo['filename']) . $this->ext;
+			$output = $tmpdir . uniqid($fileInfo['filename']) . $this->ext;
 			
 			$cmd = "java -jar " . $dir . "yuicompressor-2.4.2.jar " . $options . "-o " . $output . " " . $input . " 2>&1";
 			exec($cmd, $out, $err); // Run Compressor
-			$compression = round((filesize($output) / filesize($input)) * 100, 0) . '%';
 			
-			unlink($input); // Delete Input File
 		}
 		
-		
 		if ($err === 0) {
+			$compression = round((filesize($output) / filesize($input)) * 100, 0) . '%';
+			
 			$this->fp['content'] .= file_get_contents($output);
 			$this->fp['content'] .= "\n\n";
-
 			unlink($output);
 		}
 		
+		unlink($input); // Delete Input File
 		
 		$this->createReport($data, $compression, $out, $err);
 
@@ -318,11 +319,12 @@ class Yui {
 		}
 		while ($file = readdir($dir_handle)) {
 			if ($file != "." && $file != "..") {
-				if (!is_dir($dirname . DS . $file)) {
-					unlink($dirname . DS . $file);
+				$filepath = $dirname . DS . $file;
+				if (!is_dir($filepath)) {
+					unlink($filepath);
 				}
 				else {
-					$this->deleteDir($dirname . DS . $file);
+					$this->deleteDir($filepath);
 				}
 			}
 		}
