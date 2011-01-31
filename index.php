@@ -38,7 +38,7 @@
 				 <p>
 	                <label for="name">Name for compressed file:</label>
 	                <input type="text" id="name" name="name" value="" maxlength="40">
-					<strong>.</strong> <input id="name-suffix" disabled name="name-suffix" maxlength="3">
+					<strong>.</strong> <input id="name-suffix" name="name-suffix" maxlength="3">
 		        </p>
 			</div>
 			

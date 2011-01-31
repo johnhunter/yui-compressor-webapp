@@ -5,6 +5,8 @@
 	
 */
 
+window.userWarning = window.userWarning || [];
+
 
 
 $(document).ready(function () {
@@ -13,6 +15,16 @@ $(document).ready(function () {
 	multiUpload.init();
 	
 });
+
+
+// used by both client and server
+function showWarning (msg) {
+	var m = msg || userWarning.join('\n');
+	if (!msg) userWarning = [];
+	
+	alert(m);
+}
+
 
 
 /*
@@ -80,6 +92,7 @@ var multiUpload = function ($) {
 			submit(function (e) {
 				if (fileCount == 0) return error('noUploadFile', 'fatal');
 				submitButton.addClass('waiting');
+				return true;
 			}).
 			find(':text').bind('keypress', function (e) {
 				if (e.keyCode == 13) return false;
@@ -182,6 +195,8 @@ var multiUpload = function ($) {
 			$.tmpl('fileRowTemplate', v).appendTo(listContainer);
 			fileCount++;
 			fileTypeField.val(fileExtn);
+			
+			return true;
 		});
 		
 		if (!fileNameField.val()) {
@@ -195,11 +210,11 @@ var multiUpload = function ($) {
 		
 		
 		if (severity === 'fatal') {
-			alert(messages[name] || name);
+			showWarning(messages[name] || name);
 			return false;
 		}
 		else {
-			alert(messages[name] || name);
+			showWarning(messages[name] || name);
 		}
 		
 		return true;
