@@ -19,20 +19,37 @@
 	TODO: properly sanitize all user input
 	TODO: refactor the entire php application :)
 	
-
+	see: http://www.julienlecomte.net/yuicompressor/README for hints etc.
+	
+	Based on the YUI Compressor which requires Java 1.4
+	
+	http://yuilibrary.com/projects/yuicompressor/
 		
 */
 
 class Yui {
 	
-	// chown these to webserver and chmod 0755
-	protected $tmp_dir = 'tmp';
-	protected $output_dir = 'download';
 	
+	protected $tmp_dir;
+	protected $output_dir;
 	protected $fp = array();
 	protected $fileList;
 	protected $ext;
-	public $report = ''; // store warnings from compressor
+	protected $eof;
+	public $report; // store warnings from compressor
+	
+	
+	function __construct() {
+		
+		// chown these to webserver and chmod 0755
+		$this->tmp_dir = 'tmp';
+		$this->output_dir = 'download';
+		
+		
+		$this->report = '';
+		$this->eof = "\n";// user can change this in options
+		
+	}
 	
 	
 	public function validateExtn($ext) {
@@ -127,6 +144,18 @@ class Yui {
 			TODO: Consider making options sticky.
 			
 		*/
+		switch ($data['eol_style']) {
+			case 'crlf':
+				$this->eof = "\r\n";
+				break;
+			case 'cr':
+				$this->eof = "\r";
+				break;
+			default:
+				$this->eof = "\n";
+				break;
+		}
+		
 		$options = "";
 		$options .= "--charset UTF-8 ";
 		
@@ -175,7 +204,7 @@ class Yui {
 			$compression = round((filesize($output) / filesize($input)) * 100, 0) . '%';
 			
 			$this->fp['content'] .= file_get_contents($output);
-			$this->fp['content'] .= "\n\n";
+			$this->fp['content'] .= $this->eof.$this->eof;
 			unlink($output);
 		}
 		
@@ -198,7 +227,7 @@ class Yui {
 		$newUploadDir = $this->output_dir . DS . date('Ymd_His') . DS;
 		$rs = @mkdir($newUploadDir, 0755);// fixed mode - has to be an int
 		if($rs) {
-			file_put_contents($newUploadDir . $filename, $this->processVar($name_set['file-header']) . "\n\n" . $data);
+			file_put_contents($newUploadDir . $filename, $this->processVar($name_set['file-header']) . $this->eof.$this->eof . $data . $this->eof.$this->eof);
 
 			if(file_exists($newUploadDir . $filename)) {
 				// Return url for file

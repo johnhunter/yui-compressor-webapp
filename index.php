@@ -64,10 +64,19 @@
 						<select name="line_break" id="line_break">
 							<option value="">none</option>
 							<option value="0">after each statement / css rule</option>
-							<option value="120">at column 120 (readable)</option>
+							<option value="80">at column 80</option>
+							<option value="120">at column 120</option>
 							<option value="8000">at column 8000 (source control friendly)</option>
 						</select>
 					</label>
+					<label for="eol_style">End of line style: &nbsp;
+						<select name="eol_style" id="eol_style">
+							<option value="lf">LF - Unix, OS X (preferred)</option>
+							<option value="crlf">CRLF - Windows, MS-DOS</option>
+							<option value="cr">CR - OS 9 (obsolete)</option>
+						</select>
+					</label>
+					
 				</fieldset>
 				<fieldset>
 					<legend>JavaScript options</legend>
