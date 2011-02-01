@@ -1,191 +1,293 @@
 /*
 	Web implementation of the Yui compressor.
-	author: J. Hunter / A. Smith
-	Modified: 2010-07-25
+	author: J. Hunter
+	Modified: 2011-01-05
+	
 */
+
+window.userWarning = window.userWarning || [];
+
 
 
 $(document).ready(function () {
 	
+	frameDialog.init('#result-frame');
 	multiUpload.init();
-	
-
-	$("#removefield").click(function (e){
-		$("#files p.row:last").prev().remove();
-		e.preventDefault();
-		return(false);
-	});
-	
-	$('#options-control').click(function (e) {
-		this.blur();
-		e.preventDefault();
-		$(this).toggleClass('active');
-		$('#options').slideToggle(200);
-	});
 	
 });
 
 
-var multiUpload = {
-	errorMessages: {
-		noUploadFile:	'You need to upload at least one file.', 
-		wrongFileType:	'Supported file types are .js or .css only.',
-		mixedFile:		'You can only compress one file type at a time, please upload either .js or .css files.',
-		noOutputFile:	'Please provide an output file name.'
-	},
-	errorType: {},
-	compressedSuffix: '-min',
+// used by both client and server
+function showWarning (msg) {
+	var m = msg || userWarning.join('\n');
+	if (!msg) userWarning = [];
 	
-	
-	init: function () {
-		var that = this,
-			container = $('#files');
-			
-		
-		that.currentIndex = 0;
-		that.fileType = $('#name-suffix');
-		that.fileName = $('#name');
-		that.initialFilename = '';
-		that.resetErrors();
-		
-		that.populate($('p.row:last', container), true);
-		
-		$('#addFileUpload').click(function (e) {
-			var prev = $('p.row:last', container);
-			container.append(prev.clone());
-			var current = container.find('p.row:last');
-			$('input', current).show();
-			$('a.remove-field', current).hide();
-			$('span.filename', current).remove();
-			
-			that.populate(current);
-			
-			e.preventDefault();
-			this.blur();
-		});
-		
-		$('#compress-button').click(function (e) {
-			var inputs = $('#files input');
-			
-			if ($('#name').val() === '') that.errorType.noOutputFile = true;
-			if (inputs.length === 0) that.errorType.noUploadFile = true;
-			
-			inputs.each(function () {
-				that.processUploadFile($(this));
-			});
-			
-			
-			if (that.showErrors()) {
-				e.preventDefault();
-				return false;
-			}
-			
-			return true;
-		});
-		
-		$('form :text').bind('keypress', function (e) {
-			// dont submit on enter
-			if (e.keyCode == 13) { return false; }
-		});
-		
-	},
-	
-	populate: function (row, initial) {
-		var that = this,
-			index = that.currentIndex;
-			
-		index++;
-		$('span.index', row).html(index);
-		
-		$("input[type='file']", row)
-			.val('')
-			.change(function (e) {
-				var input = $(this),
-					filename = that.processUploadFile(input);
-				
-				// hide input and show filename
-				input.hide().before('<span class="filename">'+ filename +'</span>');
-				
-				that.showErrors();
-			});
-		
-		$('a.remove-field', row).click(function (e) {
-			$(this).parents('p.row').remove();
-			that.enableRemoveButtons();
-			e.preventDefault();
-		});
-		
-		if (!initial) {
-			row.hide();
-			row.slideDown(200);
-		}
+	alert(m);
+}
 
-		that.enableRemoveButtons();
-		
-		that.currentIndex++;
-	},
+
+
+/*
+	Module multiUpload - multifile upload and compression.
+	@author	John Hunter
+*/
+var multiUpload = function ($) {
 	
-	getFilename: function (fullpath) {
-		return fullpath.split(/[\\|\/]/).pop();
-	},
+	var fileList,
+		fileCount,
+		listContainer,
+		fileExtn,
+		uploadField,
+		fileTypeField,
+		fileNameField,
+		allowedFileTypes = /js|css/i,
+		defaultFileName = 'lib-min',
+		detailsText = ['show details','hide details'],
+		submitButton,
+		messages = {
+			noSupport:			'Your browser does not support multiple file uploads! \n\nThis application requires: Firefox 3.6+, Chrome 9+, or Safari 5+', 
+			noUploadFile: 		'You need to upload at least one file to compress.', 
+			wrongFileType: 		'Supported file types are .js or .css only.',
+			mixedFile:			'You can only compress one file type at a time, please upload either .js or .css files.',
+			confDeleteFile:		'Are you sure you want to remove this file?',
+			confOverwriteFiles: 'Selecting new files for upload will overwrite your existing selection. Do you want to do that?'
+		};
 	
-	enableRemoveButtons: function () {
-		var buttons = $('#files a.remove-field');
-		if (buttons.length === 1) {
-			buttons.hide();
-		}
-		else {
-			buttons.show();
-		}
-	},
 	
-	processUploadFile: function (input) {
-		//called on each upload click
+	function init () {
 		
-		var that =  this,
-			filename = that.getFilename(input.val()),
-			errorType = { noUploadFile: false, wrongFileType: false, mixedFile: false, noOutputFile: false },
-			errorMsg = '',
-			ext = '',
-			fileType = that.fileType.val();
-			name = filename.split('.');
-			
+		uploadField = $('#upload');
+		fileTypeField = $('#name-suffix');
+		fileNameField = $('#name');
+		listContainer = $('#filenames');
+		submitButton = $('#compress-button');
+		$('#fileRowTmpl').template('fileRowTemplate');
 		
-		ext = name.pop().toLowerCase();
-		name = name.join('.');
+		clearFileList();
 		
-		
-		if (!(/js|css/.test(ext))) that.errorType.wrongFileType = true;
-		if (that.fileName.val() === '') {
-			that.fileName.val(name + that.compressedSuffix);
-		}
-		if (fileType !== '' && fileType !== ext) {
-			that.errorType.mixedFile = true;
-		}
-		else {
-			that.fileType.val(ext);
+		if (uploadField.length && !('files' in uploadField.get(0))) {
+			return error('noSupport', 'fatal');
 		}
 		
-		return filename;
-	},
-	
-	resetErrors: function () {
-		this.errorType = { noUploadFile: false, wrongFileType: false, mixedFile: false, noOutputFile: false };
-	},
-	
-	showErrors: function () {
-		var errorMsg = '';
+		listContainer.sortable({
+			axis: 'y' ,
+			containment: 'parent',
+			forcePlaceholderSize: true,
+			cursor: 'move',
+			tolerance: 'pointer'
+		});
 		
-		for (var key in this.errorType) {
-			if (this.errorType[key]) errorMsg += this.errorMessages[key] + '\n\n';
-		}
-		this.resetErrors();
+		uploadField.
+			change(parseUpload).
+			click(function () {
+				var isConfirmed = true;
+				if (fileCount > 0) {
+					isConfirmed = confirm(messages.confOverwriteFiles);
+					if (isConfirmed) clearFileList();
+				}
+				return isConfirmed;
+			});
 		
-		if (errorMsg) {
-			alert(errorMsg);
-			return true;
-		}
-		return false;
+		$('form').
+			submit(function (e) {
+				if (fileCount == 0) return error('noUploadFile', 'fatal');
+				submitButton.addClass('waiting');
+				return true;
+			}).
+			find(':text').bind('keypress', function (e) {
+				if (e.keyCode == 13) return false;
+			});
+		
+		
+			$("table").delegate("td", "hover", function(){
+				$(this).toggleClass("hover");
+			});
+		
+		listContainer.delegate('a.remove-field', 'click', function (e) {
+			var row = $(this).parents('p');
+			e.preventDefault();
+			row.addClass('active');
+			if (confirm(messages.confDeleteFile)) {
+				row.swapClass('deleting','active').fadeOut(function () { row.remove(); });
+				fileCount--;
+				if (fileCount === 0) clearFileList();
+			}
+			else {
+				row.removeClass('active');
+			}
+		});
+		
+		$('#options-control').click(function (e) {
+			this.blur();
+			e.preventDefault();
+			$(this).toggleClass('active');
+			$('#options').slideToggle(200);
+		});
 	}
 	
-};
+	function clearFileList () {
+		listContainer.empty();
+		fileCount = 0;
+		fileList = [];
+		fileExtn = '';
+		fileNameField.val('');
+		fileTypeField.val('');
+	}
+	
+	function processResult (body) {
+		var reportPanel = $('#report', body);
+		
+		submitButton.removeClass('waiting');
+		
+		if (reportPanel.length) {
+			
+			$('dl', reportPanel).each(function (i) {
+				var detail = $(this),
+					control,
+					id = 'detail-' + (i+1);
+					
+				control = $('<a href="#' + id + '">' + detailsText[0] + '</a>').click(function (e) {
+					e.preventDefault();
+					var el = $(this),
+						c = 'expanded',
+						isExp = el.hasClass(c);
+
+					if (isExp) this.blur();
+					el.text(detailsText[ isExp ? 0 : 1 ]);
+					el.toggleClass(c);
+					detail.toggle();
+					frameDialog.resize();
+				});
+
+				detail.hide().attr('id', id).prev().append(control);
+			});
+			
+			return;
+		}
+	}
+	
+	function parseUpload () {
+		
+		fileList = uploadField.get(0).files || [];
+		
+		$.each(fileList, function (i, v) {
+			//	from file api: v.name, v.size, v.type
+			// NOTE: v.type is reported as text/* (Firefox) or application/x-javascript (Chrome)
+			
+			var name = v.name.split('.'),
+				extn = name.pop().toLowerCase();
+			
+			
+			if (fileList.length === 1) fileNameField.val(name.join('.') + '-min');
+			
+			if (!fileExtn) {
+				if (!allowedFileTypes.test(extn)) {
+					return error('wrongFileType', 'warning');// continue
+				}
+				fileExtn = extn;
+			}
+			else if (fileExtn !== extn) {
+				return error('mixedFile', 'fatal');// break
+			}
+
+			v.kbSize = Number(v.size/1000).toFixed(2);
+			
+			$.tmpl('fileRowTemplate', v).appendTo(listContainer);
+			fileCount++;
+			fileTypeField.val(fileExtn);
+			
+			return true;
+		});
+		
+		if (!fileNameField.val()) {
+			fileNameField.val(defaultFileName);
+		}
+		
+	}
+	
+	function error (name, severity) {
+		// TODO: write proper error reporting
+		
+		
+		if (severity === 'fatal') {
+			showWarning(messages[name] || name);
+			return false;
+		}
+		else {
+			showWarning(messages[name] || name);
+		}
+		
+		return true;
+	}
+	
+	return {
+		init: init,
+		processResult: processResult
+	};
+}(jQuery);
+
+
+
+/*
+	Module frameDialog - loads content in a frameset
+	@author	John Hunter
+	created	2011-01-06
+*/
+var frameDialog = function ($) {
+	
+	var frame,
+		frameBody,
+		title = document.title;
+	
+	function init (iframeSelector, titleSep) {
+		titleSep = titleSep || ' > ';
+		frame = $(iframeSelector).hide();
+		
+		
+		frame.load(function () {
+			frameBody = $('body', frame.contents());
+			
+			var frameTitle = $('title', frameBody.parent()).html();
+			if (frameTitle) document.title = title + titleSep + frameTitle;
+			
+			$('a.close', frameBody).click(close);
+			
+			multiUpload.processResult(frameBody);
+			
+			frame.show();
+			resize();
+			
+		});
+	}
+	
+	function resize () {
+		frame.height(frameBody.outerHeight(true));
+	}
+	
+	function close (e) {
+		if (e) e.preventDefault();
+		document.title = title;
+		frame.hide();
+	}
+	
+	return {
+		init: init,
+		resize: resize
+	};
+	
+}(jQuery);
+
+
+
+// --- move to lib.js ---------------------------------------------------------/
+/*
+	swapClass - a jQuery plugin
+	@author	John Hunter
+*/
+(function ($) {
+	
+	$.fn.swapClass = function (add, remove) {
+		return this.addClass(add).removeClass(remove);
+	};
+		
+})(jQuery);
