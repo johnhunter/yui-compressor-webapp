@@ -255,7 +255,8 @@ class YuiCompressor {
 		$name .= $this->ext;
 
 		// Make New Directory
-		$outDir = $this->outputDir .'/'. time() .'_'. md5($_SERVER['REMOTE_ADDR']) . '/';
+		$outId = substr(md5($_SERVER['REMOTE_ADDR']), 0, 8);
+		$outDir = "$this->outputDir/". time() ."_$outId/";
 		
 		$outPath = $outDir . $name;
 		
