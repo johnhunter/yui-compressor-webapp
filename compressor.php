@@ -1,17 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="utf-8">
+	<title>Compressor result</title>
 <?php
-
-/*
-include_once "inc/core.php";
-
-
-if($_POST['submit']){
-    $yui = new Yui;
-    $yui->execute(array_merge($_FILES, $_POST));
-}
-*/
 
 include 'inc/YuiCompressor.php';
 
@@ -23,11 +15,7 @@ if ($_POST['submit']) {
 	$compressor->run();
 	
 }
-
-
 ?>
-	<meta charset="utf-8">
-	<title>Compressor result</title>
 	<link rel="stylesheet" type="text/css" href="assets/general.css" media="all">
 </head>
 <body>

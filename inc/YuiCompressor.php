@@ -7,20 +7,19 @@
 	Created       2011-01-31
 	Copyright (c) 2011 johnhunter.info. All rights reserved. 
 	
-	Requires >= PHP 5.2.0
+	Requires: >= Java 1.4, >= PHP 5.2.0
 	
-	Based on the YUI Compressor which requires Java 1.4
+	Based on the YUI Compressor
 	http://yuilibrary.com/projects/yuicompressor/
 	
-	NOTE: This is a complete rewrite of an original solution built by J Hunter & Andrew Smith while at Syzygy UK Ltd.
-	
+	This is a complete rewrite based on a personal project by John Hunter & Andrew Smith while at Syzygy UK Ltd.
 	
 	TODO: Integrate http://www.julienlecomte.net/yuicompressor/README for hints etc.
 	
 */
 
 /**
-* YuiCompressor
+* YuiCompressor 
 */
 class YuiCompressor {
 	
@@ -33,7 +32,8 @@ class YuiCompressor {
 	protected $skipMinFiles;
 	protected $compressorOptions;
 	protected $ext;
-	protected $eof;
+	protected $eol;
+	protected $keepHours;
 	public $fileHtmlLink;
 	public $report;
 	
@@ -49,10 +49,11 @@ class YuiCompressor {
 		$this->files = array();
 		$this->output = '';
 		$this->skipMinFiles = true;
-		$this->eof = "\n";// user can change this in options
+		$this->eol = "\n";// user can change this in options
 		$this->compressorOptions = '';
 		$this->report = '';
 		$this->fileHtmlLink = '';
+		$this->keepHours = 1; // number of hours to keep files.
 		
 	}
 	
@@ -78,22 +79,27 @@ class YuiCompressor {
 		}
 	}
 	
+	public function convertEol ($content) {
+		return preg_replace('/(\r?\n)|\r/', $this->eol, $content);
+	}
 	
+		
 	protected function setOptions (&$data) {
 		
-		switch ($data['eol_style']) {
+		switch ($data['eol-style']) {
 			case 'crlf':
-				$this->eof = "\r\n";
+				$this->eol = "\r\n";
 				break;
 			case 'cr':
-				$this->eof = "\r";
+				$this->eol = "\r";
 				break;
 			default:
-				$this->eof = "\n";
+				$this->eol = "\n";
 				break;
 		}
 		
-		$this->skipMinFiles = !empty($data['skipmin']);// TODO harmonise field names.
+		$this->skipMinFiles = !empty($data['skip-min']);// TODO harmonise field names.
+		
 		$this->ext = '.' . $this->validateExtn($data['name-suffix']);
 		
 		/*	
@@ -106,7 +112,7 @@ class YuiCompressor {
 			-o Place the output into . Defaults to stdout.
 
 			JavaScript Options
-			--nomunge Minify only, do not obfuscate
+			--no-munge Minify only, do not obfuscate
 			--preserve-semi Preserve all semicolons
 			--disable-optimizations Disable all micro optimizations
 			
@@ -115,7 +121,7 @@ class YuiCompressor {
 		$options = "";
 		$options .= "--charset UTF-8 ";// NOTE: charset is hardwired
 		
-		$breakLength = $data['line_break'];
+		$breakLength = $data['line-break'];
 		
 		if(is_numeric($breakLength)) {
 			$breakLength = min(intval($breakLength), 10000);// sanitize input
@@ -123,13 +129,12 @@ class YuiCompressor {
 		}
 		
 		if($data['verbose']) $options .= "--verbose ";
-		if($data['nomunge']) $options .= "--nomunge ";
-		if($data['preserve_semi']) $options .= "--preserve-semi ";
-		if($data['disable_optimizations']) $options .= "--disable-optimizations ";
+		if($data['no-munge']) $options .= "--no-munge ";
+		if($data['preserve-semi']) $options .= "--preserve-semi ";
+		if($data['disable-optimizations']) $options .= "--disable-optimizations ";
 		
 		$this->compressorOptions = $options;
 	}
-	
 	
 	protected function getUpload (&$uploadFiles) {
 		
@@ -178,7 +183,32 @@ class YuiCompressor {
 		}
 	}
 
+	protected function sortFiles (&$uploadFiles, &$fileOrder) {
 	
+		// If a fileOrder list (HTML5 file api) provided then reorder the uploaded files
+		if (isset($fileOrder)) {
+			$newList = Array();
+			$count = 0;
+			$itemIndex; // file index in FILES array based on fileorder list
+			
+			foreach($fileOrder as $itemName) {
+				$itemIndex = array_search($itemName, $uploadFiles['name']);
+				
+				$newList['name'][$count]     = $uploadFiles['name'][$itemIndex];
+				$newList['tmp_name'][$count] = $uploadFiles['tmp_name'][$itemIndex];
+				$newList['error'][$count]    = $uploadFiles['error'][$itemIndex];
+				$newList['size'][$count]     = $uploadFiles['size'][$itemIndex];
+				$newList['type'][$count]     = $uploadFiles['type'][$itemIndex];
+				
+				$count++;
+			}
+			return $newList;
+		}
+		
+		return $uploadFiles;
+		
+	}
+		
 	protected function makeCompressedFile ($file) {
 		
 		$fileName = pathinfo($file, PATHINFO_FILENAME);
@@ -198,9 +228,6 @@ class YuiCompressor {
 			
 			$cmd = "java -jar {$this->root}yuicompressor-2.4.2.jar {$this->compressorOptions} -o $output $input 2>&1";
 			
-			echo "CMD is: $cmd\n";
-			exit;
-			
 			exec($cmd, $out, $err);
 		}
 		
@@ -210,7 +237,7 @@ class YuiCompressor {
 			$compression = round((filesize($output) / filesize($input)) * 100, 0) . '%';
 			
 			$this->output .= file_get_contents($output);
-			$this->output .= $this->eof.$this->eof;
+			$this->output .= $this->eol.$this->eol;
 			unlink($output);
 		}
 		
@@ -219,35 +246,59 @@ class YuiCompressor {
 		$this->createFileReport($file, $compression, $out, $err);	
 	}
 	
-	
 	protected function saveCompressedFile ($name = '', $header = '') {
-		
-		$data = $this->output;
 		
 		$this->clearOldFiles();
 		
 		// Create filename
-		if (empty($name)) $name =  'lib_' . date('Ymd_His');
+		if (empty($name)) $name =  'lib-min';
 		$name .= $this->ext;
 
 		// Make New Directory
-		$outDir = "$this->$outputDir/" . date('Ymd_His') . '/';
+		$outDir = $this->outputDir .'/'. time() .'_'. md5($_SERVER['REMOTE_ADDR']) . '/';
+		
 		$outPath = $outDir . $name;
 		
-		if($rs = @mkdir($outDir, 0755)) {
+		if(mkdir($outDir, 0744)) {
 			
-			file_put_contents($outPath, $this->processVar($name_set['file-header']) . $this->eof.$this->eof . $this->output . $this->eof);
-
-			if(file_exists($outPath)) {
+			$out  = $this->parsePlaceholderVars($header);
+			$out .= $this->eol.$this->eol;
+			$out .= $this->output;
+			$out .= $this->eol.$this->eol;
+			
+			if(file_put_contents($outPath, $out)) {
 				// url for file
 				$this->fileHtmlLink = '<a href="' . $outPath . '" target="_blank">'. $name .'</a>';
-				
 			}
 		}
 		
 		return $this->fileHtmlLink;
 	}
+	
+	protected function parsePlaceholderVars ($content) {
+		
+		$this->convertEol($content);
 
+		$fileCount = count($this->files);
+		$i = 1;
+		foreach($this->files as $theFile) {
+			$theFileList .= $theFile;
+			if ($fileCount > 1 && $fileCount != $i) {
+				$theFileList .= ', ';
+			}
+			$i++;
+		}
+		
+		$content = str_replace(array (
+				'[file list]',
+				'[date:time]'
+			), array (
+				$theFileList,
+				date('d/m/Y H:i')
+			), $content);
+
+		return $content;
+	}
 	
 	protected function createFileReport ($fileName, $compression, $out, $err) {
 		$report = '';
@@ -285,36 +336,8 @@ class YuiCompressor {
 		
 		$this->report .= $report;
 	}
-
 	
-	protected function sortFiles (&$uploadFiles, &$fileOrder) {
-	
-		// If a fileOrder list (HTML5 file api) provided then reorder the uploaded files
-		if (isset($fileOrder)) {
-			$newList = Array();
-			$count = 0;
-			$itemIndex; // file index in FILES array based on fileorder list
-			
-			foreach($fileOrder as $itemName) {
-				$itemIndex = array_search($itemName, $uploadFiles['name']);
-				
-				$newList['name'][$count]     = $uploadFiles['name'][$itemIndex];
-				$newList['tmp_name'][$count] = $uploadFiles['tmp_name'][$itemIndex];
-				$newList['error'][$count]    = $uploadFiles['error'][$itemIndex];
-				$newList['size'][$count]     = $uploadFiles['size'][$itemIndex];
-				$newList['type'][$count]     = $uploadFiles['type'][$itemIndex];
-				
-				$count++;
-			}
-			return $newList;
-		}
-		
-		return $uploadFiles;
-		
-	}
-	
-	
-	protected function validateExtn($ext) {
+	protected function validateExtn ($ext) {
 		switch ($ext) {
 			case 'js':
 			case 'css':
@@ -324,7 +347,6 @@ class YuiCompressor {
 		}
 		return $ext;
 	}
-	
 	
 	protected function formatReportWarnings ($line) {
 		
@@ -336,30 +358,37 @@ class YuiCompressor {
 			
 		return $line;
 	}
+	
+	protected function clearOldFiles () {
 
+		$path = "$this->outputDir/";
+		$handle = opendir($path);
+		
+		$expiryHour = date("H") - $this->keepHours;
+		$expiryDate = mktime($expiryHour, date("i"), date("s"), date("m") , date("d"), date("Y"));
 
-	// remove older comressed files from file system
-	protected function clearOldFiles() {
-		
-		// TODO: remove dirs that are 2 days old.
-		$dir = opendir($this->output_dir);
-		$path = $this->output_dir . '/';
-		$todayMatch = date('Ymd') . '_';
-		
-		while($file = readdir($dir)) {
-			if (strpos($file, '.') !== 0) {
-				// delete dirs not created today
-				if (strpos($file, $todayMatch) === false) {
-					$this->deleteDir($path . $file);
+		while($file = readdir($handle)) {
+			if ($file != '.' && $file != '..') {
+				
+				if (is_dir($path . $file)) {
+					
+					$nameTokens = explode('_', $file);
+					if (count($nameTokens) === 2) {
+						
+						$dirDate = array_shift($nameTokens);
+						
+						if ($dirDate < $expiryDate) {
+							$this->deleteDir($path . $file);
+						}
+					}
 				}
 			}
 		}
-		closedir($dir);
+		closedir($handle);
 	}
 	
-	
 	// Recursively empty a directory and then delete it.
-	protected function deleteDir($dirname) {
+	protected function deleteDir ($dirname) {
 		if (is_dir($dirname)) {
 			$dir_handle = opendir($dirname);
 		}
@@ -381,7 +410,6 @@ class YuiCompressor {
 		rmdir($dirname);
 		return true;
 	}
-	
 	
 	// send a message to the user.
 	protected function warnUser ($message, $isFatal = false) {
@@ -408,9 +436,6 @@ class YuiCompressor {
 	}
 	
 }
-
-
-
 
 
 ?>

@@ -21,7 +21,6 @@
 	
     <div id="main">
         <form method="post" enctype="multipart/form-data" target="result-frame" action="compressor.php">
-		<!--<form method="post" enctype="multipart/form-data" target="result-frame" action="http://realhost/~johnhunter/php-test/form_response.php">-->
 			
 			<div id="upload-wrapper">
 				<button>select files for upload&hellip;</button>
@@ -38,7 +37,7 @@
 				 <p>
 	                <label for="name">Name for compressed file:</label>
 	                <input type="text" id="name" name="name" value="" maxlength="40">
-					<strong>.</strong> <input id="name-suffix" name="name-suffix" maxlength="3">
+					<strong>.</strong> <input id="name-suffix" readonly="readonly" name="name-suffix" maxlength="3">
 		        </p>
 			</div>
 			
@@ -60,8 +59,8 @@
 						<input type="checkbox" id="verbose" name="verbose" checked="checked" value="true">
 						display informational messages and warnings 
 					</label>
-					<label for="line_break">Insert line breaks: &nbsp;
-						<select name="line_break" id="line_break">
+					<label for="line-break">Insert line breaks: &nbsp;
+						<select name="line-break" id="line-break">
 							<option value="">none</option>
 							<option value="0">after each statement / css rule</option>
 							<option value="80">at column 80</option>
@@ -69,8 +68,8 @@
 							<option value="8000">at column 8000 (source control friendly)</option>
 						</select>
 					</label>
-					<label for="eol_style">End of line style: &nbsp;
-						<select name="eol_style" id="eol_style">
+					<label for="eol-style">End of line style: &nbsp;
+						<select name="eol-style" id="eol-style">
 							<option value="lf">LF - Unix, OS X (preferred)</option>
 							<option value="crlf">CRLF - Windows, MS-DOS</option>
 							<option value="cr">CR - OS 9 (obsolete)</option>
@@ -80,20 +79,20 @@
 				</fieldset>
 				<fieldset>
 					<legend>JavaScript options</legend>
-					<label for="skipmin">
-						<input type="checkbox" id="skipmin" name="skipmin" checked="checked" value="true">
+					<label for="skip-min">
+						<input type="checkbox" id="skip-min" name="skip-min" checked="checked" value="true">
 						don't compress files ending 'min.js'
 					</label>
-					<label for="nomunge">
-						<input type="checkbox" id="nomunge" name="nomunge" value="true">
+					<label for="no-munge">
+						<input type="checkbox" id="no-munge" name="no-munge" value="true">
 						minify only - don't obfuscate local variables  
 					</label>
-					<label for="preserve_semi">
-						<input type="checkbox" id="preserve_semi" name="preserve_semi" value="true">
+					<label for="preserve-semi">
+						<input type="checkbox" id="preserve-semi" name="preserve-semi" value="true">
 						preserve semicolons
 					</label>
-					<label for="disable_optimizations">
-						<input type="checkbox" id="disable_optimizations" name="disable_optimizations" value="true">
+					<label for="disable-optimizations">
+						<input type="checkbox" id="disable-optimizations" name="disable-optimizations" value="true">
 						disable micro-optimizations (e.g. pre-processing string concatenations)
 					</label>
 				</fieldset>
