@@ -10,7 +10,7 @@ The Yui Compressor web-app is a web based tool for compressing and concatenating
 
 The idea for the Yui Compressor web-app started life as a personal project of [John Hunter](http://johnhunter.info/) and Andrew Smith while working at [Syzygy UK](http://www.syzygy.co.uk/) - a London web agency. 
 
-As part of research on build processes we realised that not all projects have a formal build system and that Yui-compressor command-line tool would gain greater acceptance if it had a more usable interface.
+As part of research on build processes we realised that not all projects will have a formal build system and that the Yui-compressor command-line tool would gain greater acceptance if it could concatenate files and had a simpler interface.
 
 An early version of the web-app was launched and hosted internally with Syzygy. Subsequently all maintenance and development was taken on by John Hunter with released versions being made available to Sygygy developers for internal use.
 
@@ -50,9 +50,9 @@ The compressor can be used to compress individual files or compress several file
 
 1.	Select all the files for upload in the single file selection dialog box.
 
-2.	You can drag to reorder the files in the web-app, and remove any not required. This allows you to set up the correct files and their loading order easily.
+2.	Drag to reorder the files in the web-app, and remove any not required. This allows you to set up the correct files and their loading order easily.
 
-3.	There are options to change various parameters of the compressor - these are hidden and rarely needed as the defaults are good for 99% of the time.
+3.	Options are provided to change various compressor parameters - these are hidden and rarely needed as the defaults are good for 99% of the time.
 
 4.	The default output file name can be changed but the web-app is pretty clever at figuring out an appropriate default.
 
@@ -62,7 +62,7 @@ The compressor can be used to compress individual files or compress several file
 
 7.	The results include a summary of how well each file compressed and a list of warnings from the compressor. These indicate where bad coding practises exist or problems that reduce the effectiveness of the compression (a common one is multiple var declarations in the same scope). Because we still have the uploaded file list its easy to make a code change and hit the compress button again.
 
-8.	The app is built for mulituser. Each compressed file is sandboxed in its own directory. Every time the compressor runs it does a cleanup and removes compressed files older than 1 hour so old files don't clog the filesystem.
+8.	The app is built for mulituser. Each compressed file is sandboxed in its own directory. Every time the compressor runs it does a cleanup and removes compressed files older than 1 hour so they don't clog the filesystem.
 
 
 ### Suggested file organisation ###
@@ -86,7 +86,7 @@ The output filename defaults are optimised for this approach.
 
 ## Options ##
 
-The compressor provides various options for both the web-app and the compressor itself. You will rarely need to change from the default settings so these are not initially displayed in the web-app screen.
+The compressor provides options for both the web-app and the compressor itself. You will rarely need to change from the default settings so these are not initially displayed in the web-app screen.
 
 
 
