@@ -175,7 +175,7 @@ class YuiCompressor {
 							break;
 
 						default:
-							$this->warnUser("Some error occured with the upload of {$nameInfo['basename']} (error $error). ");
+							$this->warnUser("Some error occurred with the upload of {$nameInfo['basename']} (error $error). ");
 							break;
 					}
 				}
