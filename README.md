@@ -108,13 +108,13 @@ This allows you to turn off the reporting produced by the compressor. The report
 
 #### Insert line breaks ####
 
-You can insert line breaks in the output file if required. This isn't usually necessary and will increase the size of the file a little. You may want to have a line break after each CSS rule to aid debugging. Also, certain version-control systems have issues with very long lines (see ??).
+You can insert line breaks in the output file if required. This isn't usually necessary and will increase the size of the file a little. You may want to have a line break after each CSS rule to aid debugging. Also, certain version-control systems have issues with very long lines.
 
 #### End of line style ####
 
-By default the end of line (EOL) character is LF but you may change this if you have problems with mixed EOL markers in version-control systems (see ??).
+By default the end of line (EOL) character is LF but you may change this if you have problems with mixed EOL markers in version-control systems.
 
-**Note about version control:** Where you encounter issues with committing the compressed file to version-control systems you should consider flagging the file as binary. After-all, there would be little point in attempting to merge changes in a compressed file. 
+**Note about version control:** Where you encounter issues with committing the compressed file to version-control systems you might consider flagging the file as binary. After-all, there would be little point in attempting to merge changes in a compressed file. 
 
 ### JavaScript options ###
 
