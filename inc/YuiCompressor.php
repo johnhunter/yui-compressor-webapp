@@ -14,7 +14,6 @@
 	
 	This is a complete rewrite based on a personal project by John Hunter & Andrew Smith while at Syzygy UK Ltd.
 	
-	TODO: Integrate http://www.julienlecomte.net/yuicompressor/README for hints etc.
 	
 */
 
