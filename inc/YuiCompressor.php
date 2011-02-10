@@ -264,7 +264,6 @@ class YuiCompressor {
 			$out  = $this->parsePlaceholderVars($header);
 			$out .= $this->eol.$this->eol;
 			$out .= $this->output;
-			$out .= $this->eol.$this->eol;
 			
 			if(file_put_contents($outPath, $out)) {
 				// url for file
