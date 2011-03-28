@@ -14,7 +14,6 @@
 	
 	This is a complete rewrite based on a personal project by John Hunter & Andrew Smith while at Syzygy UK Ltd.
 	
-	FIXME: Css compression breaks media queries by removing leading space on '(' - e.g. @media screen and(orientation:landscape)
 	NOTE: Css compression converts rgb(nnn,nnn,nnn) to #0x0x0x format.
 	
 */
@@ -227,7 +226,7 @@ class YuiCompressor {
 		else {
 			$output = $tmpPath . uniqid($fileName) . $this->ext;
 			
-			$cmd = "java -jar {$this->root}yuicompressor-2.4.2.jar {$this->compressorOptions} -o $output $input 2>&1";
+			$cmd = "java -jar {$this->root}yuicompressor-2.4.5.jar {$this->compressorOptions} -o $output $input 2>&1";
 			
 			exec($cmd, $out, $err);
 		}
