@@ -200,7 +200,7 @@ becomes:
 
 ## Licence ##
 
-Licenced under the [Simplified BSD License](https://github.com/johnhunter/yui-compressor-webapp/LICENSE.txt):
+Licenced under the [Simplified BSD License](https://github.com/johnhunter/yui-compressor-webapp/blob/master/LICENSE.txt):
 
 Copyright 2011 John Hunter. All rights reserved.
 
