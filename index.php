@@ -107,10 +107,21 @@
         <iframe id="result-frame" name="result-frame" src="" allowtransparency="true" style="display:none"></iframe>
     </div>
 
-	<p id="yui">
-		Powered by <img src="assets/yahoo.gif" width="140" height="33" alt="Yahoo">
-		<a href="http://developer.yahoo.com/yui/compressor/">YUI compressor</a>
-	</p>
+	<div id="credits">
+		
+		<p class="yui">
+			Powered by <img class="yui" src="assets/yahoo.gif" width="140" height="33" alt="Yahoo">
+			<a href="http://developer.yahoo.com/yui/compressor/">YUI compressor</a>
+		</p>
+		
+		<p class="licence">
+			Licenced under the Simplified BSD License: &copy; 2011 John Hunter. All rights reserved.<br>
+			<a href="https://github.com/johnhunter/yui-compressor-webapp">https://github.com/johnhunter/yui-compressor-webapp</a>
+		</p>
+		
+	</div>
+
+	
 
 
 </div>

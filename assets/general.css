@@ -278,11 +278,16 @@ a.close {
 
 
 
-#yui {
-	margin-top: 2em;
+#credits {
+	font-size: 0.8em;
+	color: #666;
 	text-align: center;
 }
-#yui img {
+p {
+	margin-top: 2em;
+}
+img.yui {
+	opacity: 0.7;
 	position: relative;
 	top: 14px;
 }
