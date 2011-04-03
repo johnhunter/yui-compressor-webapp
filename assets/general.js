@@ -123,6 +123,12 @@ var multiUpload = function ($) {
 			$(this).toggleClass('active');
 			$('#options').slideToggle(200);
 		});
+		
+		window.onbeforeunload = function () {
+			if (fileCount > 0) {
+				return 'You will loose the file list and its current order.';
+			}
+		};
 	}
 	
 	function clearFileList () {
@@ -132,6 +138,8 @@ var multiUpload = function ($) {
 		fileExtn = '';
 		fileNameField.val('');
 		fileTypeField.val('');
+		
+		uploadField.val('');// clear upload so that onchange will fire.
 	}
 	
 	function processResult (body) {
