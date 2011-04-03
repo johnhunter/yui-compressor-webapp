@@ -50,7 +50,8 @@ var multiUpload = function ($) {
 			wrongFileType: 		'Supported file types are .js or .css only.',
 			mixedFile:			'You can only compress one file type at a time, please upload either .js or .css files.',
 			confDeleteFile:		'Are you sure you want to remove this file?',
-			confOverwriteFiles: 'Selecting new files for upload will overwrite your existing selection. Do you want to do that?'
+			confOverwriteFiles: 'Selecting new files for upload will overwrite your existing selection. Do you want to do that?',
+			confLeavePage:      'You will loose your existing file selection and order.'
 		};
 	
 	
@@ -126,7 +127,7 @@ var multiUpload = function ($) {
 		
 		window.onbeforeunload = function () {
 			if (fileCount > 0) {
-				return 'You will loose the file list and its current order.';
+				return messages.confLeavePage;
 			}
 		};
 	}
