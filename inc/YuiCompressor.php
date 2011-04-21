@@ -316,6 +316,9 @@ class YuiCompressor {
 			$report .= '<dl>';
 			/*
 				TODO: Improve the report parsing.
+				Rather attempting to parse the output, why not just fork the compressor https://github.com/yui/yuicompressor
+				and change the format of the reporting. The error reporting for script errors could be improved by identifing
+				line & col numbers clearly and hiding the Java exception stacktrace.
 			*/
 			for ($i = 0; $i < $count; $i++) {
 				$line = $out[$i];

@@ -243,6 +243,7 @@ a.close {
 	border: 1px solid #999;
 	margin: 10px 0;
 	padding: 0 10px;
+	clear: both;
 	font-size: .8em;
 	line-height: 1.3em;
 	background: #CFEDF1;
@@ -267,6 +268,7 @@ a.close {
 	color: #135900;
 	font-family: monospace;
 	font-size: 120%;
+	overflow: auto;
 }
 #report dd em {
 	font-style: normal;
