@@ -308,7 +308,7 @@ class YuiCompressor {
 			$report .= "<h4>{$fileName} (compressed: {$compression})</h4>\n";
 		}
 		else {
-			$report .= "<h4 class=\"error\">{$fileName} COMPRESSION FAILED!!<h4>";
+			$report .= "<h4 class=\"error\">{$fileName} COMPRESSION FAILED!!</h4>";
 		}
 		
 		if ($count > 0) {
