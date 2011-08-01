@@ -55,6 +55,10 @@ class YuiCompressor {
 		$this->fileHtmlLink = '';
 		$this->keepHours = 1; // number of hours to keep files.
 		
+		// PHP now throws warnings if timezone is not set.
+		// Datetimes used are relative so no real need to localise this.
+		date_default_timezone_set('Europe/London');
+		
 	}
 	
 	
